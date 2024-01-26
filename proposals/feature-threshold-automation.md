@@ -26,7 +26,7 @@ consensus. As such, a feature gate needs to be supported by a strong majority
 of cluster stake when it is activated, or else it risks partitioning the
 network. The current feature-gate system comprises two steps:
 
-1. An individual key-holder queues a feature gate for activation
+1. An individual key-holder stages a feature gate for activation
 2. The runtime automatically activates the feature on the next epoch boundary
 
 The key-holder is the one who *manually* (with the help of the solana-cli)
@@ -58,35 +58,45 @@ beneficial.
 
 The proposed new process would be comprised of the following steps:
 
-1. **Authorized Feature Submission:** In some epoch 0, the multi-signature
+1. **Feature Creation:** Contributors create feature accounts with the Solana
+   CLI as they do now.
+2. **Staging Features for Activation:** In some epoch 0, the multi-signature
    authority submits features for activation.
-2. **Signaling Support for Staged Features:** During the next epoch (epoch 1),
+3. **Signaling Support for Staged Features:** During the next epoch (epoch 1),
    validators signal which of the staged feature-gates they support in their
    software.
-3. **Activation and Garbage Collection:** On the next epoch boundary, the
+4. **Activation and Garbage Collection:** On the next epoch boundary, the
    runtime activates the feature-gates that have the necessary stake support.
    At the same time, the runtime also removes spam and archives activated
    feature accounts.
 
-### Step 1: Authorized Feature Submission
+### Step 1: Feature Creation
+
+The first step in the new process shall consist of the already existing method
+for creating new features using the Solana CLI (`solana feature activate`). This
+command could possibly be renamed to `solana feature create`.
+
+This command sends a transaction containing System instructions to fund,
+allocate, and assign the feature account to
+`Feature111111111111111111111111111111111111`. This can be performed by anyone.
+
+This step merely creates a feature, but will no longer stage it for activation.
+
+### Step 2: Staging Features for Activation
 
 A multi-signature authority shall be created to submit features for activation.
 This multi-signature will comprise key-holders from Solana Labs and possibly
 from other validator client teams in the future. In the future, this authority
 could be replaced by validator governance.
 
-The transaction to submit a feature activation shall contain the necessary
-System Program instructions to fund, allocate, and assign the feature account
-to `Feature111111111111111111111111111111111111`, as well as the Feature Gate
-program's instruction `SubmitFeatureForActivation`.
-
-The `SubmitFeatureForActivation` instruction verifies the signature of the
-multi-signature authority, then adds the submitted feature ID to the **next
-epoch's** Staged Features PDA.
+The multi-signature authority submits a feature for activation by invoking the
+Feature Gate program's `SubmitFeatureForActivation` instruction, which verifies
+the signature of the multi-signature authority, then adds the submitted feature
+ID to the **next epoch's** Staged Features PDA.
 
 The Staged Features PDA for a given epoch stores a list of all feature IDs that
-were submitted prior to that epoch. To start, this list shall have a maximum
-length of 8.
+were submitted for activation during the previous epoch. To start, this list
+shall have a maximum length of 8.
 
 The proposed seeds for deriving the Staged Features PDA are provided below,
 where the `<epoch>` represents the epoch during which features are staged for
@@ -97,7 +107,7 @@ end of that epoch.
 "staged_features" + <epoch>
 ```
 
-### Step 2: Signaling Support for Staged Features
+### Step 3: Signaling Support for Staged Features
 
 With an on-chain reference point to determine the features staged for activation
 for a particular epoch, nodes can signal their support for the staged features
@@ -118,7 +128,7 @@ that node's vote address. The proposed seeds are defined below.
 "support_signal" + <vote_address>
 ```
 
-An example of this instruction is defined below.
+An example of the `SignalSupportForStagedFeatures` instruction is defined below.
 
 ```rust
 pub enum FeatureGateInstruction {
@@ -151,7 +161,7 @@ nodes may still signal support for this feature. However, the runtime will not
 activate this feature if its corresponding feature account no longer exists
 on-chain.
 
-### Step 3: Activation and Garbage Collection
+### Step 4: Activation and Garbage Collection
 
 During the epoch rollover, the runtime uses the validator support signals to
 determine which staged features to activate.
@@ -166,16 +176,21 @@ This threshold shall be set to 95% initially, but future iterations on the
 process could allow feature key-holders to set a custom threshold per-feature.
 
 If a feature is not activated, either because it has been revoked or it did not
-meet the required stake support, it must be resubmitted according to Step 1.
+meet the required stake support, it must be resubmitted according to Step 2.
 
 To ensure this new process doesn't overload the Feature Gate program's owned
 accounts, during the activation stage, garbage collection will:
 
 - Archive any activated feature accounts
 - Archive this epoch's Staged Features PDA
-- Delete any spam feature accounts with no state
+- Delete any spam feature accounts with no state. These are accounts owned by
+  `Feature111111111111111111111111111111111111` that do not appear in the
+  feature set.
 
 The runtime "archives" an account by assigning it to the Feature Tombstone.
+
+Created features that were not staged for activation or did not meet the
+required stake support will not be garbage collected.
 
 ## Alternatives Considered
 
