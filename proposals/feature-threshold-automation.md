@@ -37,6 +37,10 @@ If instead the runtime was to assess this stake support for activating a
 feature, this would eliminate the key-holder's responsibility to asses stake
 support, reducing the risk of human error.
 
+In a world where multiple clients will aim to push features and seek to agree on
+their activation, a more automated and secure process will be extremely
+beneficial.
+
 ## New Terminology
 
 - **Feature Gate program:** The Core BPF program introduced in
@@ -173,21 +177,6 @@ accounts, during the activation stage, garbage collection will:
 
 The runtime "archives" an account by assigning it to the Feature Tombstone.
 
-### Conclusion
-
-This new process provides additional safeguards for submitting features for
-activation as well as an automated stake support threshold check before
-activating them. This greatly reduces the risk of human error when enabling new
-functionality on the network, as well as minimizes the risk of cluster
-partitioning.
-
-Additionally, this system makes use of on-chain data and a client-agnostic BPF
-program to perfom its duties, further decentralizing the feature activation
-process.
-
-These enhancements will be especially useful in a world where multiple clients
-will aim to push features and seek to agree on their activation.
-
 ## Alternatives Considered
 
 ## Impact
@@ -196,8 +185,9 @@ This new process for activating features directly impacts core contributors and
 validators.
 
 Core contributors will no longer bear the responsibility of ensuring the proper
-stake supports their feature activation. However, it will change the process
-by which they can override this stake requirement to push a feature through.
+stake supports their feature activation. However, this proposal does not include
+a mechanism for overriding or customizing the stake requirement. This capability
+should be proposed separately.
 
 Validators will be responsible for signaling their vote using a transaction
 which they've previously not included in their process. They also will have a
