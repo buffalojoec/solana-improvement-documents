@@ -82,7 +82,7 @@ epoch's** Staged Features PDA.
 
 The Staged Features PDA for a given epoch stores a list of all feature IDs that
 were submitted prior to that epoch. To start, this list shall have a maximum
-length of 5.
+length of 8.
 
 The proposed seeds for deriving the Staged Features PDA are provided below,
 where the `<epoch>` represents the epoch during which features are staged for
@@ -101,12 +101,14 @@ supported by their software.
 
 A node signals its support for staged features by invoking the Feature Gate
 program's `SignalSupportForStagedFeatures` instruction, which requires a  
-`[u8; 5]` bit mask of the staged features. Each element of the bit mask is
-either a `1` - representing a supported feature - or a `0`. The program stores
-this provided bit mask in a Support Signal PDA derived from the node's vote
-address.
+`u8` bit mask of the staged features.
 
-The proposed seeds for deriving a Support Signal PDA are defined below.
+A `1` bit represents support for a feature. For example, for staged features
+`[A, B, C, D, E, F, G, H]`, if a node wishes to signal support for all features
+except `E` and `H`, their `u8` value would be 246, or `11110110`.
+
+A node's submitted bit mask is then stored in a Support Signal PDA derived from
+that node's vote address. The proposed seeds are defined below.
 
 ```
 "support_signal" + <vote_address>
@@ -132,7 +134,7 @@ pub enum FeatureGateInstruction {
     ///   0. `[w]`      Support Signal PDA
     ///   1. `[s]`      Vote account
     SignalSupportForFeatureSet {
-        bit_mask: [u8; 5],
+        bit_mask: u8,
     },
 }
 ```
