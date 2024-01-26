@@ -84,6 +84,15 @@ The Staged Features PDA for a given epoch stores a list of all feature IDs that
 were submitted prior to that epoch. To start, this list shall have a maximum
 length of 5.
 
+The proposed seeds for deriving the Staged Features PDA are provided below,
+where the `<epoch>` represents the epoch during which features are staged for
+activation, evaluated based on stake support, and potentially activated at the
+end of that epoch. 
+
+```
+"staged_features" + <epoch>
+```
+
 ### Step 2: Signaling Support for Staged Features
 
 With an on-chain reference point to determine the features staged for activation
@@ -96,6 +105,12 @@ program's `SignalSupportForStagedFeatures` instruction, which requires a
 either a `1` - representing a supported feature - or a `0`. The program stores
 this provided bit mask in a Support Signal PDA derived from the node's vote
 address.
+
+The proposed seeds for deriving a Support Signal PDA are defined below.
+
+```
+"support_signal" + <vote_address>
+```
 
 An example of this instruction is defined below.
 
