@@ -46,9 +46,9 @@ support, reducing the risk of human error.
   features submitted for activation for a particular epoch.
 - **Support Signal PDA:** The PDA under the Feature Gate program used to store
   a bit mask of the staged features a node supports.
-- **Feature Tombstone PDA:** The PDA under the Feature Gate program used to
-  assign accounts to, effectively "archiving" them and removing them from the
-  Feature Gate program's owned accounts.
+- **Feature Tombstone:** A static address with no on-chain account for assigning
+  accounts to, effectively "archiving" them and removing them from the Feature
+  Gate program's owned accounts.
 
 ## Detailed Design
 
@@ -154,7 +154,7 @@ accounts, during the activation stage, garbage collection will:
 - Archive this epoch's Staged Features PDA
 - Delete any spam feature accounts with no state
 
-The runtime "archives" an account by assigning it to the Feature Tombstone PDA.
+The runtime "archives" an account by assigning it to the Feature Tombstone.
 
 ### Conclusion
 
