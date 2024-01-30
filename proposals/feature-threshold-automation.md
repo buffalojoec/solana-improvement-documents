@@ -24,7 +24,7 @@ for a feature before activation. Instead, this would be done by the runtime.
 Feature gates wrap new cluster functionality, and typically change the rules of
 consensus. As such, a feature gate needs to be supported by a strong majority
 of cluster stake when it is activated, or else it risks partitioning the
-network. The current feature-gate system comprises two steps:
+network. The current feature-gate process involves two steps:
 
 1. An individual key-holder stages a feature gate for activation
 2. The runtime automatically activates the feature on the next epoch boundary
@@ -51,8 +51,8 @@ beneficial.
 - **Support Signal PDA:** The PDA under the Feature Gate program used to store
   a bit mask of the staged features a node supports.
 - **Feature Tombstone:** A static address with no on-chain account for assigning
-  accounts to, effectively "archiving" them and removing them from the Feature
-  Gate program's owned accounts.
+  accounts under, effectively "archiving" them and removing them from the
+  Feature Gate program's owned accounts.
 
 ## Detailed Design
 
@@ -61,7 +61,7 @@ The proposed new process would be comprised of the following steps:
 1. **Feature Creation:** Contributors create feature accounts with the Solana
    CLI as they do now.
 2. **Staging Features for Activation:** In some epoch 0, the multi-signature
-   authority submits features for activation.
+   authority stages created features for activation.
 3. **Signaling Support for Staged Features:** During the next epoch (epoch 1),
    validators signal which of the staged feature-gates they support in their
    software.
@@ -84,24 +84,24 @@ This step merely creates a feature, but will no longer stage it for activation.
 
 ### Step 2: Staging Features for Activation
 
-A multi-signature authority shall be created to submit features for activation.
+A multi-signature authority shall be created to stage features for activation.
 This multi-signature will comprise key-holders from Solana Labs and possibly
 from other validator client teams in the future. In the future, this authority
 could be replaced by validator governance.
 
-The multi-signature authority submits a feature for activation by invoking the
-Feature Gate program's `SubmitFeatureForActivation` instruction, which verifies
-the signature of the multi-signature authority, then adds the submitted feature
-ID to the **next epoch's** Staged Features PDA.
+The multi-signature authority stages a feature for activation by invoking the
+Feature Gate program's `StageFeatureForActivation` instruction, which verifies
+the signature of the multi-signature authority, then adds the feature ID to the
+**next epoch's** Staged Features PDA.
 
 The Staged Features PDA for a given epoch stores a list of all feature IDs that
-were submitted for activation during the previous epoch. To start, this list
-shall have a maximum length of 8.
+were staged for activation during the previous epoch. To start, this list shall
+have a maximum length of 8 (ie. `[Pubkey; 8]`).
 
 The proposed seeds for deriving the Staged Features PDA are provided below,
-where the `<epoch>` represents the epoch during which features are staged for
-activation, evaluated based on stake support, and potentially activated at the
-end of that epoch. 
+where the `<epoch>` represents the epoch during which the contained feature IDs
+will be assessed for stake support and potentially activated at the end of that
+epoch.
 
 ```
 "staged_features" + <epoch>
