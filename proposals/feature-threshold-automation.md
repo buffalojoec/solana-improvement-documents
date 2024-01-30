@@ -128,31 +128,6 @@ that node's vote address. The proposed seeds are defined below.
 "support_signal" + <vote_address>
 ```
 
-An example of the `SignalSupportForStagedFeatures` instruction is defined below.
-
-```rust
-pub enum FeatureGateInstruction {
-    /// Signal support for staged features.
-    ///
-    /// This instruction submits a bit mask representing the current epoch's
-    /// staged features.
-    ///
-    /// Validators submit these bit masks to describe feature-gates supported
-    /// by their current software version.
-    ///
-    /// A `1` value represents support for the feature at that index of the
-    /// bit mask, while a `0` represents a lack of support (or rejection).
-    ///
-    /// Accounts expected by this instruction:
-    ///
-    ///   0. `[w]`      Support Signal PDA
-    ///   1. `[s]`      Vote account
-    SignalSupportForFeatureSet {
-        bit_mask: u8,
-    },
-}
-```
-
 Nodes shall send this instruction at some arbitrary point during the epoch at
 least 128 slots before the end of the epoch and on startup after any reboot.
 
