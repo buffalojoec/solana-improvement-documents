@@ -16,8 +16,8 @@ feature: (fill in with feature tracking issues once accepted)
 This SIMD outlines a proposal for automating the feature activation process
 based on a stake-weighted support threshold, rather than manual human action.
 
-With this new process, contributors would no longer have to assess stake support
-for a feature before activation. Instead, this would be done by the runtime.
+With this new process, contributors no longer have to assess stake support for a
+feature before activation. Instead, the assessment is done by the runtime.
 
 ## Motivation
 
@@ -56,52 +56,51 @@ beneficial.
 
 ## Detailed Design
 
-The proposed new process would be comprised of the following steps:
+The new process is comprised of the following steps:
 
-1. **Feature Creation:** Contributors create feature accounts with the Solana
-   CLI as they do now.
-2. **Staging Features for Activation:** In some epoch 0, the multi-signature
-   authority stages created features for activation.
-3. **Signaling Support for Staged Features:** During the next epoch (epoch 1),
+1. **Feature Creation:** Contributors create feature accounts as they do now.
+2. **Staging Features for Activation:** In some epoch N, a multi-signature
+   authority stages for activation some or all of the features created in step
+   1.
+3. **Signaling Support for Staged Features:** During the next epoch (epoch N+1),
    validators signal which of the staged feature-gates they support in their
    software.
-4. **Activation and Garbage Collection:** On the next epoch boundary, the
-   runtime activates the feature-gates that have the necessary stake support.
-   At the same time, the runtime also removes spam and archives activated
-   feature accounts.
+4. **Activation and Garbage Collection:** At the end of epoch N+1, the runtime
+   activates the feature-gates that have the necessary stake support. At the
+   same time, the runtime also removes spam and archives activated feature
+   accounts.
 
 ### Step 1: Feature Creation
 
-The first step in the new process shall consist of the already existing method
-for creating new features using the Solana CLI (`solana feature activate`). This
-command could possibly be renamed to `solana feature create`.
-
-This command sends a transaction containing System instructions to fund,
-allocate, and assign the feature account to
-`Feature111111111111111111111111111111111111`. This can be performed by anyone.
-
-This step merely creates a feature, but will no longer stage it for activation.
+The first step is creation of a feature account, done by submitting a
+transaction containing System instructions to fund, allocate, and assign the
+feature account to `Feature111111111111111111111111111111111111`.
 
 ### Step 2: Staging Features for Activation
 
-A multi-signature authority shall be created to stage features for activation.
-This multi-signature will comprise key-holders from Solana Labs and possibly
-from other validator client teams in the future. In the future, this authority
-could be replaced by validator governance.
+A multi-signature authority, comprised of key-holders from Solana Labs and
+possible other validator client teams in the future, will have the authority to
+stage created features for activation.
+In the future, this authority could be replaced by validator governance.
 
 The multi-signature authority stages a feature for activation by invoking the
-Feature Gate program's `StageFeatureForActivation` instruction, which verifies
-the signature of the multi-signature authority, then adds the feature ID to the
-**next epoch's** Staged Features PDA.
+Feature Gate program's `StageFeatureForActivation` instruction. This instruction
+expects:
+- Data: The feature ID
+- Accounts:
+  - Staged Features PDA: writable
+  - Multi-signature authority: signer 
+
+`StageFeatureForActivation` will add the provided feature ID to the **next
+epoch's** Staged Features PDA.
 
 The Staged Features PDA for a given epoch stores a list of all feature IDs that
-were staged for activation during the previous epoch. To start, this list shall
-have a maximum length of 8 (ie. `[Pubkey; 8]`).
+were staged for activation during the previous epoch. This list shall have a
+maximum length of 8 (ie. `[Pubkey; 8]`).
 
 The proposed seeds for deriving the Staged Features PDA are provided below,
-where the `<epoch>` represents the epoch during which the contained feature IDs
-will be assessed for stake support and potentially activated at the end of that
-epoch.
+where the `<epoch>` is the epoch during which the contained feature IDs will be
+assessed for stake support and considered for activation.
 
 ```
 "staged_features" + <epoch>
@@ -114,8 +113,12 @@ for a particular epoch, nodes can signal their support for the staged features
 supported by their software.
 
 A node signals its support for staged features by invoking the Feature Gate
-program's `SignalSupportForStagedFeatures` instruction, which requires a  
-`u8` bit mask of the staged features.
+program's `SignalSupportForStagedFeatures` instruction. This instruction
+expects:
+- Data: A `u8` bit mask of the staged features.
+- Accounts:
+  - Support Signal PDA: writable
+  - Vote account: signer
 
 A `1` bit represents support for a feature. For example, for staged features
 `[A, B, C, D, E, F, G, H]`, if a node wishes to signal support for all features
@@ -128,8 +131,9 @@ that node's vote address. The proposed seeds are defined below.
 "support_signal" + <vote_address>
 ```
 
-Nodes shall send this instruction at some arbitrary point during the epoch at
-least 128 slots before the end of the epoch and on startup after any reboot.
+Nodes should send a transaction containing this instruction at some arbitrary
+point during the epoch at least 128 slots before the end of the epoch and on
+startup after any reboot.
 
 Note: If a feature is revoked, the list of staged features will not change, and
 nodes may still signal support for this feature. However, the runtime will not
