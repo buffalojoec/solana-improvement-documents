@@ -79,7 +79,7 @@ feature account to `Feature111111111111111111111111111111111111`.
 ### Step 2: Staging Features for Activation
 
 A multi-signature authority, comprised of key-holders from Solana Labs and
-possible other validator client teams in the future, will have the authority to
+possibly other validator client teams in the future, will have the authority to
 stage created features for activation.
 In the future, this authority could be replaced by validator governance.
 
