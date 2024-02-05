@@ -67,8 +67,8 @@ The new process is comprised of the following steps:
    software.
 4. **Activation and Garbage Collection:** At the end of epoch N+1, the runtime
    activates the feature-gates that have the necessary stake support. At the
-   same time, the runtime also removes spam and archives activated feature
-   accounts.
+   same time, the runtime also archives activated feature accounts and PDAs no
+   longer required by the process.
 
 ### Step 1: Feature Creation
 
@@ -162,9 +162,6 @@ accounts, during the activation stage, garbage collection will:
 
 - Archive any activated feature accounts
 - Archive this epoch's Staged Features PDA
-- Delete any spam feature accounts with no state. These are accounts owned by
-  `Feature111111111111111111111111111111111111` that do not appear in the
-  feature set.
 
 The runtime "archives" an account by assigning it to the Feature Tombstone.
 
