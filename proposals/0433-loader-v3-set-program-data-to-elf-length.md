@@ -38,18 +38,6 @@ proposals.
 
 N/A
 
-## Dependencies
-
-This proposal depends on the following previously accepted proposal:
-
-- **[SIMD-0430]: Loader V3: Relax Program Buffer Constraints**
-
-    Introduces the `close_buffer` flag for `DeployWithMaxDataLen` and
-    `Upgrade` instructions, which determines whether the buffer account is
-    closed after the operation
-
-[SIMD-0430]: https://github.com/solana-foundation/solana-improvement-documents/pull/430
-
 ## Detailed Design
 
 The `Upgrade` instruction will be updated to automatically resize the program
@@ -71,17 +59,10 @@ rent requirement will be refunded to the spill account.
 If the new ELF is larger than the current program data account's ELF region,
 the account will be extended to accommodate the new ELF.
 
-When `close_buffer` is `true`, the buffer account's lamports and the program
-data account's existing lamports are combined to meet the new rent-exempt
-minimum. If the combined lamports are insufficient, the upgrade will fail with
-`InsufficientFunds`.
-
-When `close_buffer` is `false`, the program data account's existing lamports
-must already meet the new rent-exempt minimum. If not, the upgrade will fail
-with `InsufficientFunds`.
-
-In both cases, any lamports in excess of the rent-exempt minimum are refunded
-to the spill account.
+The buffer account's lamports and the program data account's existing lamports
+are combined to meet the new rent-exempt minimum. If the combined lamports are
+insufficient, the upgrade will fail with `InsufficientFunds`. Any lamports in
+excess of the rent-exempt minimum are refunded to the spill account.
 
 ### Feature Gate
 
